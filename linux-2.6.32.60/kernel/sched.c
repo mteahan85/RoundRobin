@@ -7224,6 +7224,7 @@ SYSCALL_DEFINE0(sched_other_rr_getquantum)
 
 SYSCALL_DEFINE1(sched_other_rr_setquantum, unsigned int, quantum)
 {
+	printk("Using setquantum! Syscall has been reached!");
 	 other_rr_time_slice = quantum;
 	 return other_rr_time_slice;
 }
