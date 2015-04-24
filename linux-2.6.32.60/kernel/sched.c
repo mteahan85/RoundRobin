@@ -7221,12 +7221,12 @@ SYSCALL_DEFINE0(sched_other_rr_getquantum)
 	return other_rr_time_slice;
 }
 
-
-SYSCALL_DEFINE1(sched_other_rr_setquantum, unsigned int, quantum)
-{
-	printk("Using setquantum! Syscall has been reached!");
-	 other_rr_time_slice = quantum;
-	 return;
+SYSCALL_DEFINE1(sched_other_rr_setquantum, unsigned int, quantum){
+	char str[100];
+	other_rr_time_slice = quantum;
+	sprintf(str, "RR Time Quantum set to: %u\n", quantum);
+	printk(str);
+	return 0;
 }
 
 

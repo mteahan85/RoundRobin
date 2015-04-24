@@ -31,12 +31,6 @@ static void update_curr_other_rr(struct rq *rq)
  */
 static void enqueue_task_other_rr(struct rq *rq, struct task_struct *p, int wakeup, bool b)
 {
-
-  
-  
-  
-  //waits until wake up?
-  if(wakeup){
     
     //first update the task's runtime statistics
     update_curr_other_rr(rq);
@@ -45,9 +39,8 @@ static void enqueue_task_other_rr(struct rq *rq, struct task_struct *p, int wake
     list_add_tail(&p->other_rr_run_list, &rq->other_rr.queue);
     
     //increments # of processes running
-    rq->other_rr->nr_running++;
+    rq->other_rr.nr_running++;
     
-  }
   
    // not yet implemented -- updates -- may still be incomplete
   
@@ -55,23 +48,15 @@ static void enqueue_task_other_rr(struct rq *rq, struct task_struct *p, int wake
 
 static void dequeue_task_other_rr(struct rq *rq, struct task_struct *p, int sleep)
 {
-  // first update the task's runtime statistics
-  update_curr_other_rr(rq);
-  
-  if(sleep){
-    
-    //need to wake up or keep sleeping? Unsure of what to do here?
-    
-    
-  }else{
+	// first update the task's runtime statistics
+	update_curr_other_rr(rq);
   
 	 //deletes item from list
     list_del(&p->other_rr_run_list);
     
     //decrements # of processes running
-    rq->other_rr->nr_running--;  
+    rq->other_rr.nr_running--;  
   
-  }
   
   // not yet implemented -- updates -- may still be incomplete
 }
@@ -113,43 +98,36 @@ static void check_preempt_curr_other_rr(struct rq *rq, struct task_struct *p, in
 static struct task_struct *pick_next_task_other_rr(struct rq *rq)
 {
   struct task_struct *next;
-  struct list_head *queue = &rq->queue;
+  struct list_head *queue = &rq->other_rr.queue;
   struct other_rr_rq *other_rr_rq = &rq->other_rr;
   
-  //there is at least one more task in the queue
-	if(other_rr_rq->nr_running > 0){
-	
-		next = list_first_entry(queue, struct task_struck, other_rr_rq);
-		next->se.exec_start = rq->clock;
-		return next;
-	
-	}
-	
-	
+  if(other_rr_rq->nr_running <1){
+	return NULL;  
+  }
   
-  
-  
-  // not yet implemented
-  
-	  
-  
-  
-  
+  next = list_first_entry(queue, struct task_struct, other_rr_run_list);
+
   
   /* after selecting a task, we need to set a timer to maintain correct
    * runtime statistics. You can uncomment this line after you have
    * written the code to select the appropriate task.
    */
-  //next->se.exec_start = rq->clock;
+  next->se.exec_start = rq->clock;
   
   /* you need to return the selected task here */
-  return NULL;
+  return next;
 }
 
 static void put_prev_task_other_rr(struct rq *rq, struct task_struct *p)
 {
-  update_curr_other_rr(rq);
-  p->se.exec_start = 0;
+	if(other_rr_time_slice==0) return;
+	
+	if( --p->task_time_slice ==0){
+		p->task_time_slice = other_rr_time_slice;
+		requeue_task_other_rr(rq, p);
+		set_tsk_need_resched(p);
+	}
+
 }
 
 #ifdef CONFIG_SMP
